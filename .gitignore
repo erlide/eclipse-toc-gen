@@ -4,3 +4,4 @@ xtend-gen
 *.xtendbin
 *.java._trace
 toc.jar
+org.xtext.tocgen/target/
