@@ -7,9 +7,9 @@
  */
 package org.xtext.tocgen
 
+import com.google.common.io.Files
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileFilter
 import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
@@ -22,13 +22,15 @@ package class TocGenerator {
 	def static void main(String[] args) {
 		try {
 			if (isHelpRequested(args)) {
-				System::err.println('''Usage: java -jar gen_toc.jar [directory]
+				System.err.println('''
+					Usage: java -jar gen_toc.jar [directory]
 
-The optional argument [directory] must point to a relative or absolute file
-system directory in which the source files are searched. The default is to
-search the current directory. The output is always generated in a subdirectory
-named "contents" in the current directory.'''.toString)
-				System::exit(1)
+					The optional argument [directory] must point to a relative or absolute file
+					system directory in which the source files are searched. The default is to
+					search the current directory. The output is always generated in a subdirectory
+					named "contents" in the current directory.
+				''')
+				System.exit(1)
 			} else if (args.length === 1) {
 				new TocGenerator(args.get(0), "contents").generate()
 			} else {
@@ -36,14 +38,14 @@ named "contents" in the current directory.'''.toString)
 			}
 		} catch (Throwable t) {
 			t.printStackTrace()
-			System::exit(1)
+			System.exit(1)
 		}
 
 	}
 
 	def private static boolean isHelpRequested(String[] args) {
 		if (args.length === 1) {
-			return Arrays::asList((#["h", "-h", "help", "-help", "--help"] as String[])).contains(args.get(0))
+			return Arrays.asList((#["h", "-h", "help", "-help", "--help"] as String[])).contains(args.get(0))
 		}
 		return args.length > 1
 	}
@@ -62,23 +64,23 @@ named "contents" in the current directory.'''.toString)
 	def void generate() throws IOException {
 		var File sourceDir = new File(sourceDirName)
 		if (!sourceDir.isDirectory()) {
-			System::err.println('''«sourceDirName» is not a directory.'''.toString)
-			System::exit(1)
+			System.err.println('''«sourceDirName» is not a directory.'''.toString)
+			System.exit(1)
 		}
 		var List<File> sourceFiles = getSourceFiles(sourceDir)
 		if (sourceFiles.isEmpty()) {
-			System::err.println('''The directory «sourceDirName» does not contain any valid input files.'''.toString)
-			System::exit(1)
+			System.err.println('''The directory «sourceDirName» does not contain any valid input files.'''.toString)
+			System.exit(1)
 		}
-		var File indexFile = new File('''«sourceDirName»«File::separator»index«fileExtension»'''.toString)
+		var File indexFile = new File('''«sourceDirName»«File.separator»index«fileExtension»'''.toString)
 		if (!indexFile.exists()) {
-			System::err.println(
+			System.err.println(
 				'''The directory «sourceDirName» does not contain an index.«fileExtension» file.'''.toString)
-			System::exit(1)
+			System.exit(1)
 		}
 		var String docTitle = getPart(indexFile)
 		indentLevel = 0
-		var File outputFile = new File('''«destDirName»«File::separator»toc.xml'''.toString)
+		var File outputFile = new File('''«destDirName»«File.separator»toc.xml'''.toString)
 		var FileWriter output = null
 		try {
 			output = new FileWriter(outputFile)
@@ -91,7 +93,7 @@ named "contents" in the current directory.'''.toString)
 		} finally {
 			if(output !== null) output.close()
 		}
-		System::out.println('''Generated file «outputFile.getAbsolutePath()»'''.toString)
+		System.out.println('''Generated file «outputFile.getAbsolutePath()»'''.toString)
 	}
 
 	def private void generateContent(List<File> markdownFiles, Writer output) throws IOException {
@@ -111,7 +113,7 @@ named "contents" in the current directory.'''.toString)
 			try {
 				closeable = new FileReader(file)
 				var BufferedReader reader = new BufferedReader(closeable)
-				System::out.println('''Processing file «file.getAbsolutePath()»'''.toString)
+				System.out.println('''Processing file «file.getAbsolutePath()»'''.toString)
 				generateContent(fileName, reader, output)
 			} finally {
 				if(closeable !== null) closeable.close()
@@ -143,8 +145,10 @@ named "contents" in the current directory.'''.toString)
 					write(output, "<topic href=\"", destDirName, "/", fileName, ".html#", anchor, "\" label=\"",
 						sectionName, "\">")
 					indent(1)
-					if(sectionLevel > lastSectionLevel + 1) lastSectionLevel = sectionLevel +
-						1 else lastSectionLevel = sectionLevel
+					if (sectionLevel > lastSectionLevel + 1)
+						lastSectionLevel = sectionLevel + 1
+					else
+						lastSectionLevel = sectionLevel
 				}
 
 			}
@@ -223,7 +227,7 @@ named "contents" in the current directory.'''.toString)
 
 			for (var int i = 0; i < sectionName.length(); i++) {
 				var char c = sectionName.charAt(i)
-				if (Character::isLetterOrDigit(c) || c === Character.valueOf('-').charValue) {
+				if (Character.isLetterOrDigit(c) || c === Character.valueOf('-').charValue) {
 					result.append(c)
 				} else if (c === Character.valueOf(' ').charValue) {
 					result.append(Character.valueOf('-').charValue)
@@ -255,12 +259,13 @@ named "contents" in the current directory.'''.toString)
 	}
 
 	def private List<File> getSourceFiles(File sourceDir) {
-		var File[] filteredFiles = sourceDir.listFiles(([ File file |
+		val files = Files.fileTreeTraverser.breadthFirstTraversal(sourceDir)
+		var File[] filteredFiles = files.filter [ File file |
 			return file.isFile() && file.getName().endsWith(fileExtension) && !file.getName().startsWith("index")
-		] as FileFilter))
-		Arrays::sort(filteredFiles,(
+		]
+		Arrays.sort(filteredFiles,(
 			[File file1, File file2|return file1.getName().compareTo(file2.getName())] as Comparator<File>))
-		return Arrays::asList(filteredFiles)
+		return Arrays.asList(filteredFiles)
 	}
 
 }
