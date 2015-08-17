@@ -106,7 +106,7 @@ package class TocGenerator {
 					indent(-1)
 					write(output, "</topic>")
 				}
-				write(output, "<topic href=\"", destDirName, "/", fileName, ".html\" label=\"", partName, "\">")
+				write(output, "<topic label=\"", partName, "\">")
 				indent(1)
 			}
 			var FileReader closeable = null
